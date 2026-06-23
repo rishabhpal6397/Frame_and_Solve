@@ -1,7 +1,8 @@
 import cv2
 import time
-
 from vision.hand_tracker import HandTracker
+from puzzle.generator import PuzzleGenerator
+from puzzle.puzzle_game import PuzzleGame
 
 def draw_status(frame, text, color=(255, 255, 255)):
     cv2.putText(
@@ -145,6 +146,17 @@ def main():
                         "screenshots/captured_image.jpg",
                         captured_image
                     )
+
+                    generator = PuzzleGenerator(grid_size=3)
+                    tiles = generator.generate_tiles()
+                    shuffled_tiles = generator.shuffle_tiles(tiles)
+
+                    game = PuzzleGame(
+                        shuffled_tiles,
+                        grid_size=3
+                    )
+
+                    game.run()
 
                     flash_frame = frame.copy()
                     flash_frame[:] = (255, 255, 255)
