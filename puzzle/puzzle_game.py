@@ -1,6 +1,9 @@
 import pygame
 import sys
 import time
+import os
+from datetime import datetime
+
 
 class PuzzleGame:
 
@@ -9,6 +12,12 @@ class PuzzleGame:
         pygame.init()
 
         self.grid_size = grid_size
+        if grid_size == 3:
+            self.difficulty = "Easy"
+        elif grid_size == 4:
+            self.difficulty = "Medium"
+        else:
+            self.difficulty = "Hard"
         self.tiles = tiles
 
         self.tile_size = 150
@@ -69,7 +78,7 @@ class PuzzleGame:
 
             if tile == self.dragging_tile:
                 border_color = (0, 255, 0)
-                
+
             pygame.draw.rect(
                 self.screen,
                 border_color,
@@ -78,6 +87,11 @@ class PuzzleGame:
             )
 
         font = pygame.font.Font(None, 36)
+        difficulty_text = font.render(
+            f"Difficulty: {self.difficulty}",
+            True,
+            (255, 255, 255)
+        )
 
         moves_text = font.render(
             f"Moves: {self.moves}",
@@ -97,14 +111,21 @@ class PuzzleGame:
         )
 
         self.screen.blit(
-            moves_text,
-            (10, self.height - 50)
+            difficulty_text,
+            (10, self.height - 85)
         )
 
-        self.screen.blit(
-            timer_text,
-            (250, self.height - 50)
-        )
+        if not self.solved:
+            
+            self.screen.blit(
+                moves_text,
+                (10, self.height - 50)
+            )
+
+            self.screen.blit(
+                timer_text,
+                (250, self.height - 50)
+            )
 
         if self.solved:
 
@@ -113,15 +134,44 @@ class PuzzleGame:
                 60
             )
 
+            small_font = pygame.font.Font(
+                None,
+                36
+            )
+
+            overlay = pygame.Surface(
+                (self.width, self.height),
+                pygame.SRCALPHA
+            )
+
+            overlay.fill((0, 0, 0, 120))
+
+            self.screen.blit(overlay, (0, 0))
             solved_text = big_font.render(
                 "YOU DID IT!",
                 True,
                 (0, 255, 0)
             )
 
+            elapsed = int(
+                self.end_time - self.start_time
+            )
+
+            
+            stats_text = small_font.render(
+                f"Moves: {self.moves} | Time: {elapsed}s",
+                True,
+                (255, 255, 255)
+            )
+
             self.screen.blit(
                 solved_text,
-                (80, self.height // 2 - 30)
+                (70, 30)
+            )
+
+            self.screen.blit(
+                stats_text,
+                (110, 90)
             )
 
         pygame.display.flip()
@@ -165,6 +215,30 @@ class PuzzleGame:
                 return False
 
         return True
+    
+    def save_achievement(self):
+
+        os.makedirs(
+            "achievements",
+            exist_ok=True
+        )
+
+        timestamp = datetime.now().strftime(
+            "%Y%m%d_%H%M%S"
+        )
+
+        filename = (
+            f"achievements/victory_{timestamp}.png"
+        )
+
+        pygame.image.save(
+            self.screen,
+            filename
+        )
+
+        print(
+            f"Achievement saved: {filename}"
+        )
 
     def run(self):
 
@@ -220,6 +294,8 @@ class PuzzleGame:
 
                                     self.solved = True
                                     self.end_time = time.time()
+                                    self.draw_board()
+                                    self.save_achievement()
 
                         self.dragging_tile = None
 

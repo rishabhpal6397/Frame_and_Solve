@@ -151,12 +151,16 @@ def main():
                     tiles = generator.generate_tiles()
                     shuffled_tiles = generator.shuffle_tiles(tiles)
 
+                    cap.release()
+                    cv2.destroyAllWindows()
+
                     game = PuzzleGame(
                         shuffled_tiles,
                         grid_size=3
                     )
 
                     game.run()
+                    break
 
                     flash_frame = frame.copy()
                     flash_frame[:] = (255, 255, 255)
