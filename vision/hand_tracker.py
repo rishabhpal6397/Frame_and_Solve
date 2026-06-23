@@ -1,6 +1,6 @@
 import cv2
 import mediapipe as mp
-
+import math
 
 class HandTracker:
     def __init__(
@@ -24,6 +24,7 @@ class HandTracker:
         )
 
         self.mp_draw = mp.solutions.drawing_utils
+        self.results = None
 
     def find_hands(self, frame, draw=True):
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -45,19 +46,47 @@ class HandTracker:
     def get_landmarks(self, frame, hand_index=0):
         landmarks = []
 
-        if self.results.multi_hand_landmarks:
-            selected_hand = self.results.multi_hand_landmarks[hand_index]
+        if self.results and self.results.multi_hand_landmarks:
 
+            if hand_index < len(self.results.multi_hand_landmarks):
+                selected_hand = self.results.multi_hand_landmarks[hand_index]
+
+                h, w, _ = frame.shape
+
+                for idx, lm in enumerate(selected_hand.landmark):
+                    cx = int(lm.x * w)
+                    cy = int(lm.y * h)
+
+                    landmarks.append({
+                        "id": idx,
+                        "x": cx,
+                        "y": cy
+                    })
+
+            return landmarks
+    
+    def get_all_hands(self, frame):
+
+        hands_data = []
+        if self.results and self.results.multi_hand_landmarks:
             h, w, _ = frame.shape
 
-            for idx, lm in enumerate(selected_hand.landmark):
-                cx = int(lm.x * w)
-                cy = int(lm.y * h)
+            for hand in self.results.multi_hand_landmarks:
+                hand_points = []
 
-                landmarks.append({
-                    "id": idx,
-                    "x": cx,
-                    "y": cy
-                })
-
-        return landmarks
+                for idx, lm in enumerate(hand.landmark):
+                    cx = int(lm.x * w)
+                    cy = int(lm.y * h)
+                    hand_points.append({
+                        "id": idx,
+                        "x": cx,
+                        "y": cy
+                    })
+                hands_data.append(hand_points)
+        return hands_data
+    
+    def calculate_distance(self, p1, p2):
+        return math.hypot(
+            p2["x"] - p1["x"],
+            p2["y"] - p1["y"]
+        )
